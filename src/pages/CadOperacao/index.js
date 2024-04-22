@@ -20,6 +20,8 @@ const CadOperacao = () => {
         rendimento: ''
     });
 
+    
+
     const [servicoRealizadoOptions, setServicoRealizadoOptions] = useState([]);
     const [florestaOptions, setFlorestaOptions] = useState([]);
     const [rendimento, setRendimento] = useState('');
@@ -31,6 +33,26 @@ const CadOperacao = () => {
         }
     }, [operacoes.hi, operacoes.hf]);
 
+    const clearOptionsAndShowMessage = useCallback(() => {
+        setOperacoes({
+            tipoOperacao: '',
+            formaOperacao: '',
+            uf: '',
+            floresta: '',
+            data: '',
+            frota: '',
+            operador: '',
+            turno: '',
+            hi: '',
+            hf: '',
+            sf: '',
+            rendimento: ''
+        });
+        setServicoRealizadoOptions([]);
+        setFlorestaOptions([]);
+        alert("Operação cadastrada com sucesso");
+    }, [setOperacoes, setServicoRealizadoOptions, setFlorestaOptions]);
+
     const saveOfflineData = useCallback((data) => {
         let offlineData = JSON.parse(localStorage.getItem('operacoesOffline')) || [];
         const existingIndex = offlineData.findIndex(item => item.id === data.id);
@@ -39,8 +61,10 @@ const CadOperacao = () => {
             localStorage.setItem('operacoesOffline', JSON.stringify(offlineData));
         }
         alert('Dados salvos localmente. Eles serão enviados quando houver conexão com a internet.');
-        clearOptionsAndShowMessage();
-    }, []);
+        clearOptionsAndShowMessage(); 
+    }, [clearOptionsAndShowMessage]); 
+
+
 
     const formatarData = (data) => {
     const partes = data.split('-'); 
@@ -127,25 +151,7 @@ const CadOperacao = () => {
         }
     };
     
-const clearOptionsAndShowMessage = useCallback(() => {
-    setOperacoes({
-        tipoOperacao: '',
-        formaOperacao: '',
-        uf: '',
-        floresta: '',
-        data: '',
-        frota: '',
-        operador: '',
-        turno: '',
-        hi: '',
-        hf: '',
-        sf: '',
-        rendimento: ''
-    });
-    setServicoRealizadoOptions([]);
-    setFlorestaOptions([]);
-    alert("Operação cadastrada com sucesso");
-}, [setOperacoes, setServicoRealizadoOptions, setFlorestaOptions]);
+
 
 
     const handleTipoOperacaoChange = (event) => {
@@ -401,6 +407,7 @@ const clearOptionsAndShowMessage = useCallback(() => {
           <input type='submit' name='cadastro' id='cadastro' value='CADASTRAR' />
         </div>
       </form>
+      
     </div>
     )
 }
