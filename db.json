@@ -1,0 +1,122 @@
+{
+  "operacoes": [
+    {
+      "tipoOperacao": "silvicultura",
+      "formaOperacao": "manual",
+      "uf": "ms",
+      "floresta": "Primavera",
+      "data": "18/04/2024",
+      "frota": "BEO8E52",
+      "operador": "Desenvolvimento",
+      "turno": "B",
+      "hi": "65",
+      "hf": "465",
+      "sf": "Herbicída",
+      "rendimento": "400.00",
+      "id": 1713469072406
+    },
+    {
+      "tipoOperacao": "colheita",
+      "formaOperacao": "mecanizada",
+      "uf": "pr",
+      "floresta": "Vila Celeste",
+      "data": "18/04/2024",
+      "frota": "AAA1113",
+      "operador": "Joao Augusto",
+      "turno": "B",
+      "hi": "65",
+      "hf": "567",
+      "sf": "Estaleirar",
+      "rendimento": "502.00",
+      "id": 1713469151503
+    },
+    {
+      "tipoOperacao": "silvicultura",
+      "formaOperacao": "manual",
+      "uf": "ms",
+      "floresta": "Caarapozinho",
+      "data": "18/04/2024",
+      "frota": "AAA1055",
+      "operador": "Mario Ayala",
+      "turno": "A",
+      "hi": "789",
+      "hf": "978465",
+      "sf": "Adubação",
+      "rendimento": "977676.00",
+      "id": 1713469905029
+    },
+    {
+      "tipoOperacao": "silvicultura",
+      "formaOperacao": "mecanizada",
+      "uf": "pr",
+      "floresta": "Conda",
+      "data": "18/04/2024",
+      "frota": "AAA1113",
+      "operador": "Grazy",
+      "turno": "B",
+      "hi": "65",
+      "hf": "567",
+      "sf": "Irrigação",
+      "rendimento": "502.00",
+      "id": 1713469927388
+    },
+    {
+      "tipoOperacao": "silvicultura",
+      "formaOperacao": "manual",
+      "uf": "ms",
+      "floresta": "Caarapozinho",
+      "data": "18/01/2024",
+      "frota": "RHJ2I06",
+      "operador": "Jhenni Maravilhosah",
+      "turno": "A",
+      "hi": "14",
+      "hf": "16",
+      "sf": "Formiga",
+      "rendimento": "2.00",
+      "id": 1713530809730,
+      "matricula": "140701"
+    }
+  ],
+  "paradas": [],
+  "frotas": [
+    {
+      "uf": "MS",
+      "fleet": "AAA5514",
+      "id": 1
+    },
+    {
+      "uf": "MS",
+      "frota": "AAAF43",
+      "id": 2
+    },
+    {
+      "uf": "PR ",
+      "fleet": "Floresta jose",
+      "id": 3
+    }
+  ],
+  "florestas": [
+    {
+      "uf": "MS",
+      "forest": "OI",
+      "id": 1
+    }
+  ],
+  "servicos": [],
+  "usuarios": [
+    {
+      "email": "desenvolvimento.uis2@gmail.com",
+      "name": "Desenvolvimento",
+      "password": "123",
+      "matricula": "140701",
+      "id": 1
+    },
+    {
+      "email": "mariohenrique.uis2@gmail.com",
+      "name": "2029871",
+      "password": "123",
+      "matricula": "2029871",
+      "id": 2
+    }
+  ]
+}
