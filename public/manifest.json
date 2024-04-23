@@ -2,7 +2,7 @@
   "name": "Lar Florestal",
   "icons": [
     {
-      "src": "lar-florestal.ico",
+      "src": "tree.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
@@ -20,8 +20,5 @@
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "short_name": "Lar Florestal",
-  "description": "Aplicativo direcionada a cadastro de operações e paradas, além de visualizações de informações referentes ao setor de florestal.",
-  "lang": "pt"
+  "background_color": "#ffffff"
 }
