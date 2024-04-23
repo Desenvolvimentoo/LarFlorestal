@@ -20,5 +20,8 @@
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#ffffff",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "short_name": "Lar Florestal",
+  "description": "Aplicativo direcionada a cadastro de operações e paradas, além de visualizações de informações referentes ao setor de florestal.",
+  "lang": "pt"
 }
