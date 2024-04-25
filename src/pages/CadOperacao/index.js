@@ -119,37 +119,34 @@ const syncOfflineData = useCallback(async () => {
         return () => clearInterval(intervalId);
     }, [syncOfflineData]);
 
+
     const createPost = useCallback(
         async (operacoes) => {
-            const operacaoComMatricula = { ...operacoes, matricula };
+            const operacaoComMatricula = { ...operacoes, matricula: matricula };
             const backendEndpoint = 'https://api-florestal.vercel.app/operacoes';
 
             try {
-                const response = await fetch(backendEndpoint, {
+                const resp = await fetch(backendEndpoint, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json', 
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(operacaoComMatricula), 
+                    body: JSON.stringify(operacaoComMatricula),
                 });
 
-                if (response.ok) {
+                if (resp.ok) {
+                    // Excluir do IndexedDB se foi sincronizado com sucesso
                     const db = await dbPromise;
-                    const transaction = db.transaction('operacoesOffline', 'readwrite');
-                    const store = transaction.objectStore('operacoesOffline');
+                    const store = db.transaction('operacoesOffline', 'readwrite').objectStore('operacoesOffline');
                     await store.delete(operacoes.id);
-
-                    clearOptionsAndShowMessage();
-                } else {
-                    console.error(`Erro ao fazer POST: ${response.statusText}`);
-                    saveOfflineData(operacoes); 
                 }
-            } catch (error) {
-                console.error('Erro ao tentar enviar dados para o backend:', error);
-                saveOfflineData(operacoes); 
+
+                clearOptionsAndShowMessage();
+            } catch (err) {
+                saveOfflineData(operacoes);  // Se falhar, salve no IndexedDB
             }
         },
-        [clearOptionsAndShowMessage, saveOfflineData, matricula] 
+        [clearOptionsAndShowMessage, saveOfflineData, matricula]
     );
 
 
