@@ -1,6 +1,16 @@
+import { openDB } from 'idb';
 import './style.css';
 import React, { useState, useCallback, useEffect } from 'react';
 import voltar from './img/voltar.png';
+
+// Configurar IndexedDB
+const dbPromise = openDB('cadastro-operacoes', 1, {
+    upgrade(db) {
+        if (!db.objectStoreNames.contains('operacoesOffline')) {
+            db.createObjectStore('operacoesOffline', { keyPath: 'id' });
+        }
+    },
+});
 
 
 const CadOperacao = () => {
@@ -17,7 +27,7 @@ const CadOperacao = () => {
         hi: '',
         hf: '',
         sf: '',
-        rendimento: ''
+        rendimento: '',
     });
 
     const [servicoRealizadoOptions, setServicoRealizadoOptions] = useState([]);
@@ -30,7 +40,6 @@ const CadOperacao = () => {
             setRendimento(rendimentoValue.toFixed(2));
         }
     }, [operacoes.hi, operacoes.hf]);
-
     const clearOptionsAndShowMessage = useCallback(() => {
         setOperacoes({
             tipoOperacao: '',
@@ -44,58 +53,61 @@ const CadOperacao = () => {
             hi: '',
             hf: '',
             sf: '',
-            rendimento: ''
+            rendimento: '',
         });
         setServicoRealizadoOptions([]);
         setFlorestaOptions([]);
-        alert("Operação cadastrada com sucesso");
-    }, [setOperacoes, setServicoRealizadoOptions, setFlorestaOptions]);
+        alert('Operação cadastrada com sucesso');
+    }, []);
 
-    const saveOfflineData = useCallback((data) => {
-        let offlineData = JSON.parse(localStorage.getItem('operacoesOffline')) || [];
-        const existingIndex = offlineData.findIndex(item => item.id === data.id);
-        if (existingIndex === -1) {
-            offlineData.push(data);
-            localStorage.setItem('operacoesOffline', JSON.stringify(offlineData));
+
+   const saveOfflineData = useCallback(async (data) => {
+        const db = await dbPromise;
+        const transaction = db.transaction('operacoesOffline', 'readwrite');
+        const store = transaction.objectStore('operacoesOffline');
+
+        const existingData = await store.get(data.id);
+        if (!existingData) {
+            await store.add(data);
+            alert('Dados salvos no IndexedDB. Eles serão enviados quando houver conexão com a internet.');
         }
-        alert('Dados salvos localmente. Eles serão enviados quando houver conexão com a internet.');
-        clearOptionsAndShowMessage(); 
-    }, [clearOptionsAndShowMessage]); 
 
+        clearOptionsAndShowMessage();
+    }, [clearOptionsAndShowMessage]);
 
+    const syncOfflineData = useCallback(async () => {
+        const db = await dbPromise;
+        const transaction = db.transaction('operacoesOffline', 'readwrite');
+        const store = transaction.objectStore('operacoesOffline');
 
-    const formatarData = (data) => {
-    const partes = data.split('-'); 
-    return `${partes[2]}/${partes[1]}/${partes[0]}`; 
-        };
-
-    const syncOfflineData = useCallback(() => {
-        const offlineData = JSON.parse(localStorage.getItem('operacoesOffline')) || [];
+        const offlineData = await store.getAll();
         if (offlineData.length > 0) {
             const backendEndpoint = 'https://api-florestal.vercel.app/operacoes';
-            Promise.all(offlineData.map(data => {
-                return fetch(backendEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
+            const successfulIds = await Promise.all(
+                offlineData.map((data) => {
+                    return fetch(backendEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    })
+                        .then((resp) => {
+                            if (resp.ok) {
+                                return data.id;
+                            } else {
+                                throw new Error('Erro ao enviar dados salvos offline');
+                            }
+                        });
                 })
-                .then(resp => {
-                    if (resp.ok) {
-                        return data.id; 
-                    } else {
-                        throw new Error('Erro ao enviar dados salvos offline');
-                    }
-                });
-            }))
-            .then(successfulIds => {
-                const updatedOfflineData = offlineData.filter(data => !successfulIds.includes(data.id));
-                localStorage.setItem('operacoesOffline', JSON.stringify(updatedOfflineData));
-            })
-            .catch(err => {
-                console.error(err);
-            });
+            );
+
+            // Remover registros sincronizados
+            await Promise.all(
+                successfulIds.map((id) => {
+                    return store.delete(id);
+                })
+            );
         }
     }, []);
 
@@ -108,58 +120,56 @@ const CadOperacao = () => {
         return () => clearInterval(intervalId);
     }, [syncOfflineData]);
 
-    const createPost = (operacoes) => {
-        const operacaoComMatricula = { ...operacoes, matricula: matricula };
-        const backendEndpoint = 'https://api-florestal.vercel.app/operacoes';
-        fetch(backendEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(operacaoComMatricula),
-        })
-        .then((resp) => {
-            if (resp.ok) {
-                const offlineData = JSON.parse(localStorage.getItem('operacoesOffline')) || [];
-                const updatedOfflineData = offlineData.filter((data) => data.id !== operacoes.id); 
-                localStorage.setItem('operacoesOffline', JSON.stringify(updatedOfflineData));
+    const createPost = useCallback(
+        async (operacoes) => {
+            const operacaoComMatricula = { ...operacoes, matricula: matricula };
+            const backendEndpoint = 'https://api-florestal.vercel.app/operacoes';
+
+            try {
+                const resp = await fetch(backendEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(operacaoComMatricula),
+                });
+
+                if (resp.ok) {
+                    const db = await dbPromise;
+                    const store = db.transaction('operacoesOffline', 'readwrite').objectStore('operacoesOffline');
+                    await store.delete(operacoes.id);  // Remover do IndexedDB se foi sincronizado
+                }
+
+                clearOptionsAndShowMessage();
+            } catch (err) {
+                saveOfflineData(operacoes);
             }
-            return resp.json();
-        })
-        .then((data) => {
-            console.log(data);
-            clearOptionsAndShowMessage();
-        })
-        .catch((err) => {
-            console.log(err);
-            saveOfflineData(operacoes); 
-        });
-    };
+        },
+        [clearOptionsAndShowMessage, saveOfflineData, matricula]
+    );
 
 
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        const dataFormatada = formatarData(operacoes.data);
-        const updatedOperacoes = { ...operacoes, rendimento, data: dataFormatada, id: Date.now() }; 
-        console.log("Data being sent:", updatedOperacoes);
+        const dataFormatada = `${operacoes.data}`; // Dependendo do formato necessário, ajuste
+        const updatedOperacoes = {
+            ...operacoes,
+            rendimento,
+            data: dataFormatada,
+            id: Date.now(), // ID exclusivo para IndexedDB
+        };
+
         if (navigator.onLine) {
             createPost(updatedOperacoes);
         } else {
             saveOfflineData(updatedOperacoes);
         }
     };
-    
 
-
-
-    const handleTipoOperacaoChange = (event) => {
+    const handleChange = (field) => (event) => {
         const { value } = event.target;
-        setOperacoes(prevState => ({
-            ...prevState,
-            tipoOperacao: value
-        }));
-        updateServicoRealizadoOptions(value, operacoes.formaOperacao);
+        setOperacoes((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleFormaOperacaoChange = (event) => {
@@ -222,7 +232,7 @@ const CadOperacao = () => {
                         type='text'
                         name='tipoOP'
                         id='tipoOP'
-                        onChange={handleTipoOperacaoChange}
+                        onChange={handleChange('tipoOperacao')}
                     >
                         <option value="">Selecionar</option>
                         <option value="silvicultura">Silvicultura</option>
