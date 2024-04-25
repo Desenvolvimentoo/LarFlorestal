@@ -23,6 +23,7 @@ const CadParadas = () => {
     const fetchOperacaoData = (id) => {
     const backendEndpoint = `https://api-florestal.vercel.app/operacoes/${id}`;
 
+
     fetch(backendEndpoint)
         .then((resp) => {
             if (resp.ok) {
@@ -50,48 +51,100 @@ const CadParadas = () => {
     };
 
 
-    const saveOfflineData = (data) => {
-        let offlineData = JSON.parse(localStorage.getItem('paradasOffline')) || []; 
-        if (!Array.isArray(offlineData)) {
-            offlineData = [offlineData];
-            console.log(offlineData)
-        }
-        offlineData.push(data);
-        localStorage.setItem('paradasOffline', JSON.stringify(offlineData));
-        alert('Dados salvos localmente. Eles serão enviados quando houver conexão com a internet.');
+    const saveOfflineData = async (data) => {
+    try {
+        const db = await openIndexedDB();
+        const transaction = db.transaction("paradasOffline", "readwrite");
+        const store = transaction.objectStore("paradasOffline");
+        store.add(data);
+
+        transaction.oncomplete = () => {
+        alert("Dados salvos no IndexedDB. Eles serão enviados quando houver conexão com a internet.");
         clearOptionsAndShowMessage();
+        };
+
+        transaction.onerror = (event) => {
+        console.error("Erro ao salvar dados no IndexedDB:", event.target.error);
+        };
+    } catch (error) {
+        console.error("Erro ao acessar IndexedDB:", error);
+    }
     };
 
-const syncOfflineData = () => {
-    const offlineData = JSON.parse(localStorage.getItem('paradasOffline')) || [];
-    const syncIndexes = []; 
-    
-    if (offlineData.length > 0) {
+    const openIndexedDB = () => {
+    return new Promise((resolve, reject) => {
+        const request = window.indexedDB.open("ParadasDB", 1);
+
+        request.onerror = (event) => {
+        console.error("Erro ao abrir IndexedDB:", event.target.error);
+        reject(event.target.error);
+        };
+
+        request.onsuccess = (event) => {
+        resolve(event.target.result);
+        };
+
+        request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains("paradasOffline")) {
+            db.createObjectStore("paradasOffline", { autoIncrement: true });
+        }
+        };
+    });
+    };
+
+const syncOfflineData = async () => {
+  try {
+    const db = await openIndexedDB();
+    const transaction = db.transaction("paradasOffline", "readonly");
+    const store = transaction.objectStore("paradasOffline");
+
+    const offlineData = await new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = (event) => reject(event.target.error);
+    });
+
+        if (offlineData.length > 0) {
         const backendEndpoint = 'https://api-florestal.vercel.app/paradas';
-        const syncRequests = offlineData.map((data, index) => {
+        const syncRequests = offlineData.map((data) => {
             return fetch(backendEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
             })
             .then((resp) => {
-                if (resp.ok) {
-                    syncIndexes.push(index); 
-                }
+            if (resp.ok) {
+                return data;
+            }
             })
             .catch((err) => {
-                console.error('Erro ao enviar dados salvos offline:', err);
+            console.error("Erro ao enviar dados salvos offline:", err);
             });
         });
 
-        Promise.all(syncRequests).then(() => {
-            const updatedOfflineData = offlineData.filter((_, index) => !syncIndexes.includes(index));
-            localStorage.setItem('paradasOffline', JSON.stringify(updatedOfflineData));
+        const successfulSyncs = await Promise.all(syncRequests);
+        const transactionWrite = db.transaction("paradasOffline", "readwrite");
+        const storeWrite = transactionWrite.objectStore("paradasOffline");
+
+        successfulSyncs.forEach((data) => {
+            const request = storeWrite.delete(data.id);
+            request.onerror = (event) => {
+            console.error("Erro ao deletar dados do IndexedDB:", event.target.error);
+            };
         });
+
+        transactionWrite.oncomplete = () => {
+            console.log("Sincronização com o servidor concluída e dados removidos do IndexedDB.");
+        };
+        }
+    } catch (error) {
+        console.error("Erro ao sincronizar dados do IndexedDB:", error);
     }
-};
+    };
+
 
     const checkInternetConnection = () => {
             setInterval(() => {
