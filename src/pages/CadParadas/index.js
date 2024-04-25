@@ -21,7 +21,7 @@ const CadParadas = () => {
     const [idOperacao, setIdOperacao] = useState('');
 
     const fetchOperacaoData = (id) => {
-    const backendEndpoint = `http://192.168.156.16:5000/operacoes/${id}`;
+    const backendEndpoint = `https://api-florestal.vercel.app/operacoes/${id}`;
 
     fetch(backendEndpoint)
         .then((resp) => {
@@ -67,7 +67,7 @@ const syncOfflineData = () => {
     const syncIndexes = []; 
     
     if (offlineData.length > 0) {
-        const backendEndpoint = 'http://192.168.156.16:5000/paradas';
+        const backendEndpoint = 'https://api-florestal.vercel.app/paradas';
         const syncRequests = offlineData.map((data, index) => {
             return fetch(backendEndpoint, {
                 method: 'POST',
@@ -104,7 +104,7 @@ const syncOfflineData = () => {
 
     const createPost = (paradas) => {
         const paradasComMatricula = { ...paradas, matricula: matricula };
-        const backendEndpoint = 'http://192.168.156.16:5000/paradas';
+        const backendEndpoint = 'https://api-florestal.vercel.app/paradas';
         fetch(backendEndpoint, {
             method: 'POST',
             headers: {

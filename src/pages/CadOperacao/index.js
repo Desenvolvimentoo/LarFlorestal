@@ -74,7 +74,7 @@ const CadOperacao = () => {
     const syncOfflineData = useCallback(() => {
         const offlineData = JSON.parse(localStorage.getItem('operacoesOffline')) || [];
         if (offlineData.length > 0) {
-            const backendEndpoint = 'http://192.168.156.16:5000/operacoes';
+            const backendEndpoint = 'https://api-florestal.vercel.app/operacoes';
             Promise.all(offlineData.map(data => {
                 return fetch(backendEndpoint, {
                     method: 'POST',
@@ -112,7 +112,7 @@ const CadOperacao = () => {
 
     const createPost = (operacoes) => {
         const operacaoComMatricula = { ...operacoes, matricula: matricula };
-        const backendEndpoint = 'http://192.168.156.16:5000/operacoes';
+        const backendEndpoint = 'https://api-florestal.vercel.app/operacoes';
         fetch(backendEndpoint, {
             method: 'POST',
             headers: {

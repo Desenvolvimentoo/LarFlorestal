@@ -13,12 +13,13 @@ const Signup = () => {
         const isLoggedIn = localStorage.getItem('isLoggedIn');
         if (isLoggedIn) {
             navigate('/home');
+            window.location.reload();
         }
     }, [navigate]);
 
     const handleLogin = async () => {
         try {
-            const response = await fetch(`http://192.168.156.16:5000/usuarios?matricula=${matricula}`);
+            const response = await fetch(`https://api-florestal.vercel.app/usuarios?matricula=${matricula}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -31,6 +32,7 @@ const Signup = () => {
 
                         localStorage.setItem('isLoggedIn', true);
                         navigate('/home');
+                        window.location.reload();
                     } else {
                         setMensagem('Senha incorreta');
                     }
@@ -74,3 +76,4 @@ const Signup = () => {
 };
 
 export default Signup;
+

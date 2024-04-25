@@ -12,7 +12,7 @@ const Signin = () => {
 
   const createPost = (usuario) => {
     if (navigator.onLine) {
-      const backendEndpoint = 'http://192.168.156.16:5000/usuarios';
+      const backendEndpoint = 'https://api-florestal.vercel.app/usuarios';
       fetch(backendEndpoint, {
         method: 'POST',
         headers: {

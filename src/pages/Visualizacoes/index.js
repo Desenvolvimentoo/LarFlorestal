@@ -20,7 +20,7 @@ const Visualizacoes = () => {
     const fetchData = async () => {
       try {
         if (tipoSelecionado !== '') {
-          let url = `http://192.168.156.16:5000/${tipoSelecionado.toLowerCase()}`;
+          let url = `https://api-florestal.vercel.app//${tipoSelecionado.toLowerCase()}`;
           if (tipoSelecionado === 'Operacoes' && tipoOPSelecionado !== '') {
             url += `?tipoOperacao=${tipoOPSelecionado.toLowerCase()}`;
           }
