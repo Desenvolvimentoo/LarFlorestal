@@ -3,7 +3,7 @@ import './style.css';
 import React, { useState, useCallback, useEffect } from 'react';
 import voltar from './img/voltar.png';
 
-// Configurar IndexedDB
+
 const dbPromise = openDB('cadastro-operacoes', 1, {
     upgrade(db) {
         if (!db.objectStoreNames.contains('operacoesOffline')) {
@@ -75,41 +75,40 @@ const CadOperacao = () => {
         clearOptionsAndShowMessage();
     }, [clearOptionsAndShowMessage]);
 
-    const syncOfflineData = useCallback(async () => {
-        const db = await dbPromise;
-        const transaction = db.transaction('operacoesOffline', 'readwrite');
-        const store = transaction.objectStore('operacoesOffline');
+const syncOfflineData = useCallback(async () => {
+    const db = await dbPromise;
+    const transaction = db.transaction('operacoesOffline', 'readwrite');
+    const store = transaction.objectStore('operacoesOffline');
 
-        const offlineData = await store.getAll();
-        if (offlineData.length > 0) {
-            const backendEndpoint = 'https://api-florestal.vercel.app/operacoes';
-            const successfulIds = await Promise.all(
-                offlineData.map((data) => {
-                    return fetch(backendEndpoint, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data),
-                    })
-                        .then((resp) => {
-                            if (resp.ok) {
-                                return data.id;
-                            } else {
-                                throw new Error('Erro ao enviar dados salvos offline');
-                            }
-                        });
+    const offlineData = await store.getAll();
+    if (offlineData.length > 0) {
+        const backendEndpoint = 'https://api-florestal.vercel.app/operacoes';
+        const successfulIds = await Promise.all(
+            offlineData.map((data) => {
+                return fetch(backendEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
                 })
-            );
+                    .then((resp) => {
+                        if (resp.ok) {
+                            return data.id;
+                        } else {
+                            throw new Error('Erro ao enviar dados salvos offline');
+                        }
+                    });
+            })
+        );
 
-            // Remover registros sincronizados
+            // Excluir registros sincronizados com sucesso
             await Promise.all(
-                successfulIds.map((id) => {
-                    return store.delete(id);
-                })
+                successfulIds.map((id) => store.delete(id))  // Exclui do IndexedDB
             );
         }
     }, []);
+
 
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -119,6 +118,7 @@ const CadOperacao = () => {
         }, 5000);
         return () => clearInterval(intervalId);
     }, [syncOfflineData]);
+
 
     const createPost = useCallback(
         async (operacoes) => {
@@ -135,18 +135,20 @@ const CadOperacao = () => {
                 });
 
                 if (resp.ok) {
+                    // Excluir do IndexedDB se foi sincronizado com sucesso
                     const db = await dbPromise;
                     const store = db.transaction('operacoesOffline', 'readwrite').objectStore('operacoesOffline');
-                    await store.delete(operacoes.id);  // Remover do IndexedDB se foi sincronizado
+                    await store.delete(operacoes.id);
                 }
 
                 clearOptionsAndShowMessage();
             } catch (err) {
-                saveOfflineData(operacoes);
+                saveOfflineData(operacoes);  // Se falhar, salve no IndexedDB
             }
         },
         [clearOptionsAndShowMessage, saveOfflineData, matricula]
     );
+
 
 
 
