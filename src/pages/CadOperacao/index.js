@@ -144,6 +144,7 @@ const CadOperacao = () => {
         event.preventDefault();
         const dataFormatada = formatarData(operacoes.data);
         const updatedOperacoes = { ...operacoes, rendimento, data: dataFormatada, id: Date.now() }; 
+        console.log("Data being sent:", updatedOperacoes);
         if (navigator.onLine) {
             createPost(updatedOperacoes);
         } else {
