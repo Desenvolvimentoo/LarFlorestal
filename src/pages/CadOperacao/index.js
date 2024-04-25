@@ -20,8 +20,6 @@ const CadOperacao = () => {
         rendimento: ''
     });
 
-    
-
     const [servicoRealizadoOptions, setServicoRealizadoOptions] = useState([]);
     const [florestaOptions, setFlorestaOptions] = useState([]);
     const [rendimento, setRendimento] = useState('');
